@@ -1,6 +1,6 @@
 # SusurrC 
 
-###### Copyright (C) 2022  Elijah Day
+###### Copyright (C) 2023  Elijah Day
 
 ### About
 
