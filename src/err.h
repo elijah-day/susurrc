@@ -23,6 +23,7 @@ SOFTWARE. */
 
 void print_err(const char *func_name, const char *err_msg);
 void print_libsdl_err(const char *func_name);
+void print_server_arg_err(void);
 
 #endif /* ERR_H */
 

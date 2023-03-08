@@ -43,7 +43,7 @@ msg_data_t;
 /* Struct for each client's data (including the socket) */
 typedef struct client_t
 {
-	bool is_connected;
+	bool is_logged_in;
 	char username[MAX_USERNAME_LEN];
 	TCPsocket socket;
 }
@@ -63,6 +63,12 @@ bool init_client_socket_set
 	TCPsocket *server_socket
 );
 
+bool init_server_socket_set
+(
+	SDLNet_SocketSet *socket_set,
+	TCPsocket *server_socket
+);
+
 void init_client_arr(client_t *client_arr, int client_cnt);
 
 void send_msg
@@ -74,13 +80,28 @@ void send_msg
 	unsigned char pubkey[crypto_box_PUBLICKEYBYTES]
 );
 
-void recv_msg
+bool recv_msg
 (
 	char *msg,
 	msg_data_t *msg_data,
 	TCPsocket *server_socket,
 	unsigned char privkey[crypto_box_SECRETKEYBYTES],
 	unsigned char pubkey[crypto_box_PUBLICKEYBYTES]
+);
+
+void add_client_to_server
+(
+	SDLNet_SocketSet *socket_set,
+	TCPsocket *socket,
+	TCPsocket *server_socket,
+	int *connected_client_cnt
+);
+
+void remove_client_from_server
+(
+	SDLNet_SocketSet *socket_set,
+	TCPsocket *socket,
+	int *connected_client_cnt
 );
 
 #endif /* NET_H */

@@ -24,13 +24,10 @@ SOFTWARE. */
 #include "sodium.h"
 #include "src/init.h"
 #include "src/net.h"
+#include "src/susurrc.h"
 #include "stdbool.h"
 #include "stdlib.h"
 
-#define MAX_CLIENT_CNT 16
-#define MAX_MSG_CNT 128
-
-/*static client_t client_arr[MAX_CLIENT_CNT];*/
 static int ready_socket_cnt;
 static IPaddress server_ip;
 static msg_data_t msg_data;
@@ -49,8 +46,8 @@ static bool init_client(int argc, char *argv[])
 	(
 		&server_ip,
 		&server_socket,
-		argv[2],
-		atoi(argv[3])
+		argv[1],
+		atoi(argv[2])
 	);
 	
 	if(init_success)
@@ -69,11 +66,12 @@ static void terminate_client(void)
 		SDLNet_FreeSocketSet(socket_set);
 }
 
-static const char *WINDOW_TITLE = "h";
+static const char *WINDOW_TITLE = "SusurrC";
 static const int BOX_PACK_PADDING = 2;
 static const int BOX_SPACING = 4;
 static const int DEFAULT_WINDOW_HEIGHT = 360;
 static const int DEFAULT_WINDOW_WIDTH = 640;
+static const int SOCKET_CHECK_TIMEOUT = 1;
 
 static GtkEntryBuffer *msg_send_text_buffer;
 static char msg_recv_buf[MAX_MSG_LEN * MAX_MSG_CNT];
@@ -103,17 +101,6 @@ static void send_client_msg(GtkWidget *msg_send_entry, gpointer data)
 		pubkey
 	);
 	
-	/* Add the message to the text view for received messages */
-	strcat(msg_recv_buf, msg);
-	strcat(msg_recv_buf, "\n");
-	
-	gtk_text_buffer_set_text
-	(
-		GTK_TEXT_BUFFER(msg_recv_text_buffer),
-		msg_recv_buf,
-		-1
-	);
-	
 	/* Clear the message entry */
 	gtk_entry_set_text(GTK_ENTRY(msg_send_entry), "");
 }
@@ -121,7 +108,7 @@ static void send_client_msg(GtkWidget *msg_send_entry, gpointer data)
 static gboolean recv_client_msg(gpointer data)
 {
 	/* Check for socket activity */
-	ready_socket_cnt = SDLNet_CheckSockets(socket_set, 1);
+	ready_socket_cnt = SDLNet_CheckSockets(socket_set, SOCKET_CHECK_TIMEOUT);
 	
 	/* Receive the message on socket activity */
 	if(ready_socket_cnt > 0)
@@ -139,16 +126,20 @@ static gboolean recv_client_msg(gpointer data)
 				pubkey
 			);
 			
-			/* Add the message to the text view for received messages */
-			strcat(msg_recv_buf, msg);
-			strcat(msg_recv_buf, "\n");
-			
-			gtk_text_buffer_set_text
-			(
-				GTK_TEXT_BUFFER(msg_recv_text_buffer),
-				msg_recv_buf,
-				-1
-			);
+			if(strcmp(msg, "") != 0)
+			{
+				/* Append the new message to the received message buffer */
+				strcat(msg_recv_buf, msg);
+				strcat(msg_recv_buf, "\n");
+				
+				/* Update text view with the new received message buffer */
+				gtk_text_buffer_set_text
+				(
+					GTK_TEXT_BUFFER(msg_recv_text_buffer),
+					msg_recv_buf,
+					-1
+				);
+			}
 		}
 		
 	/* Return true so GLib doesn't remove this fucntion from the main loop */
@@ -281,21 +272,18 @@ int main(int argc, char *argv[])
 	init_success = init_libsdl();
 	init_success = init_libsdlnet();
 	init_success = init_libsodium();
+	init_success = init_client(argc, argv);
 	
 	if(init_success)
 	{
-		if(init_client(argc, argv) == false) return 1;
-	
 		gtk_init(NULL, NULL);
 		setup_widgets();
 		gtk_widget_show_all(window);
-		
 		g_idle_add((void *)recv_client_msg, NULL);
-		
 		gtk_main();
-		terminate_client();
 	}
 	
+	terminate_client();
 	SDLNet_Quit();
 	SDL_Quit();
 	

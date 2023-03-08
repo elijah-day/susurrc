@@ -18,20 +18,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. */
 
-#include "SDL2/SDL.h"
-#include "src/err.h"
+#ifndef SUSURRC_H
+#define SUSURRC_H
 
-void print_err(const char *func_name, const char *err_msg)
-{
-	printf("%s err: %s\n", func_name, err_msg);
-}
+#define MAX_CLIENT_CNT 16
+#define MAX_MSG_CNT 128
 
-void print_libsdl_err(const char *func_name)
-{
-	printf("%s err: %s\n", func_name, SDL_GetError());
-}
+#endif /* SUSURRC_H */
 
-void print_server_arg_err(void)
-{
-	printf("Usage: susurrc-server [port]\n");
-}

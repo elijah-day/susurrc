@@ -5,12 +5,20 @@ LIBS = -lSDL2 -lSDL2_net -lsodium `pkg-config --libs gtk+-3.0`
 src_files = \
 	src/err.c \
 	src/init.c \
-	src/net.c \
-	src/main.c
+	src/net.c 
 	
-obj_files = $(src_files:.c=.o)
-target = susurrc
+build_type ?= client
+	
+ifeq ($(build_type), client)
+	src_files += src/susurrc.c
+	target = susurrc
+else ifeq ($(build_type), server)
+	src_files += src/susurrc-server.c
+	target = susurrc-server
+endif
+
 target_dir = susurrc
+obj_files = $(src_files:.c=.o)
 
 all: build run
 

@@ -1,6 +1,7 @@
 #include "SDL2/SDL_net.h"
 #include "src/err.h"
 #include "src/net.h"
+#include "src/susurrc.h"
 #include "stdbool.h"
 #include "stdlib.h"
 #include "string.h"
@@ -49,6 +50,35 @@ bool init_client_socket_set
 
 	*socket_set = NULL;
 	*socket_set = SDLNet_AllocSocketSet(1);
+	
+	if(*socket_set == NULL)
+	{
+		print_libsdl_err("SDLNet_AllocSocketSet");
+		init_success = false;
+	}
+	
+	if(init_success)
+		if(SDLNet_TCP_AddSocket(*socket_set, *server_socket) < 0)
+		{
+			print_libsdl_err("SDLNet_TCP_AddSocket");
+			init_success = false;
+		}
+	
+	return init_success;
+}
+
+bool init_server_socket_set
+(
+	SDLNet_SocketSet *socket_set,
+	TCPsocket *server_socket
+)
+{
+	bool init_success = true;
+	
+	/* One plus the max client count to account for the maximum number of
+	clients AND the server socket */
+	*socket_set = NULL;
+	*socket_set = SDLNet_AllocSocketSet(1 + MAX_CLIENT_CNT);
 	
 	if(*socket_set == NULL)
 	{
@@ -141,7 +171,7 @@ void send_msg
 	SDLNet_TCP_Send(*server_socket, msg_data, sizeof(*msg_data));
 }
 
-void recv_msg
+bool recv_msg
 (
 	char *msg,
 	msg_data_t *msg_data,
@@ -196,7 +226,57 @@ void recv_msg
 	);
 	
 	if(decryption_return != 0)
+	{	
 		print_err("crypto_box_open_easy", "Failed to decrypt the message");
-		
-	strcpy(msg, (char *)umsg);
+		return false;
+	}
+	else
+	{
+		strcpy(msg, (char *)umsg);
+		return true;
+	}
+}
+
+void add_client_to_server
+(
+	SDLNet_SocketSet *socket_set,
+	TCPsocket *socket,
+	TCPsocket *server_socket,
+	int *connected_client_cnt
+)
+{
+	/* Reject a connection if the max number of clients is reached.  It will
+	simply make the client wait until another person leaves.  Then it will
+	autoconnect them */
+	if(*connected_client_cnt >= MAX_CLIENT_CNT) return;
+	
+	/* Add the socket to the set if it is not NULL.  Close it otherwise */
+	*socket = SDLNet_TCP_Accept(*server_socket);
+	
+	if(*socket)
+	{
+		SDLNet_TCP_AddSocket(*socket_set, *socket);
+		*connected_client_cnt += 1;
+	}
+	else
+	{
+		SDLNet_TCP_Close(*socket);
+	}
+}
+
+void remove_client_from_server
+(
+	SDLNet_SocketSet *socket_set,
+	TCPsocket *socket,
+	int *connected_client_cnt
+)
+{
+	/* Remove the socket from the set and close the
+	connection */
+	SDLNet_TCP_DelSocket(*socket_set, *socket);
+	SDLNet_TCP_Close(*socket);
+	*connected_client_cnt -= 1;
+	
+	/* Set the socket to NULL so that false connections aren't detected */
+	*socket = NULL;
 }
