@@ -62,6 +62,7 @@ static GtkWidget *control_box;
 static GtkWidget *header_bar;
 static GtkWidget *inner_box;
 static GtkWidget *msg_box;
+static GtkWidget *msg_recv_scrolled_window;
 static GtkWidget *msg_recv_text_view;
 static GtkWidget *msg_send_entry;
 static GtkWidget *outer_box;
@@ -403,20 +404,23 @@ static void setup_widgets(void)
 		BOX_PACK_PADDING
 	);
 	
+	/* msg_recv_scrolled_window */
+	msg_recv_scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+	
+	gtk_box_pack_start
+	(
+		GTK_BOX(msg_box),
+		msg_recv_scrolled_window,
+		TRUE,
+		TRUE,
+		BOX_PACK_PADDING
+	);
+	
 	/* msg_recv_text_view */
 	msg_recv_text_view = gtk_text_view_new();
 	
 	msg_recv_text_buffer =
 		gtk_text_view_get_buffer(GTK_TEXT_VIEW(msg_recv_text_view));
-	
-	gtk_box_pack_start
-	(
-		GTK_BOX(msg_box),
-		msg_recv_text_view,
-		TRUE,
-		TRUE,
-		BOX_PACK_PADDING
-	);
 	
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(msg_recv_text_view), FALSE);
 	
@@ -425,6 +429,8 @@ static void setup_widgets(void)
 		GTK_TEXT_VIEW(msg_recv_text_view),
 		GTK_WRAP_WORD_CHAR
 	);
+	
+	gtk_container_add(GTK_CONTAINER(msg_recv_scrolled_window), msg_recv_text_view);
 	
 	/* msg_send_entry */
 	msg_send_entry = gtk_entry_new();
