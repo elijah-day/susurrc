@@ -100,7 +100,7 @@ void init_client_arr(client_t *client_arr, int client_cnt)
 {
 	for(int i = 0; i < client_cnt; i++)
 	{
-		client_arr[i].is_connected = false;
+		client_arr[i].is_logged_in = false;
 		strcpy(client_arr[i].username, "user");
 		client_arr[i].socket = NULL;
 	}
