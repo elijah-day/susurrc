@@ -4,12 +4,9 @@
 
 ### About
 
-SusurrC is a chat application created for communication between small groups
-of individuals via self-hosted servers.  It utilizes SDL_net and Sodium for
-cross-platform networking and encryption respectively.
-
-(This application is still in development and is not entirely functional just
-yet!!)
+SusurrC is a chat application created for group communication via
+self-hosted servers.  It utilizes SDL_net and Sodium for cross-platform
+networking and encryption respectively.
 
 ### Credits
 
